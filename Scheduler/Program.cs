@@ -13,8 +13,7 @@ var app = builder.Build();
 
 app.MapPost(
     "/multiply",
-    async (Distributor d, IValidator<IFormFileCollection> validator, IFormFileCollection files)
-    =>
+    async (Distributor d, IValidator<IFormFileCollection> validator, IFormFileCollection files) =>
     {
         var validationResult = await validator.ValidateAsync(files);
         if (!validationResult.IsValid)
@@ -23,6 +22,7 @@ app.MapPost(
         }
         d.ScheduleAsync();
         return Results.Ok();
-    });
+    }
+);
 
 app.Run();
