@@ -7,8 +7,9 @@ internal class Distributor
         _logger = logger;
     }
 
-    public void ScheduleAsync()
+    public Guid ScheduleAsync(IFormFile first, IFormFile second)
     {
         _logger.LogInformation("Scheduled");
+        return Guid.NewGuid();
     }
 }

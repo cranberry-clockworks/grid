@@ -1,5 +1,5 @@
+using System.Diagnostics;
 using FluentValidation;
-using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,15 +13,26 @@ var app = builder.Build();
 
 app.MapPost(
     "/multiply",
-    async (Distributor d, IValidator<IFormFileCollection> validator, IFormFileCollection files) =>
+    async (
+        Distributor distributor,
+        IValidator<IFormFileCollection> validator,
+        IFormFileCollection files
+    ) =>
     {
         var validationResult = await validator.ValidateAsync(files);
         if (!validationResult.IsValid)
         {
             return Results.ValidationProblem(validationResult.ToDictionary());
         }
-        d.ScheduleAsync();
-        return Results.Ok();
+
+        var first = files["First"];
+        var second = files["Second"];
+
+        Debug.Assert(first != null);
+        Debug.Assert(second != null);
+
+        var taskId = distributor.ScheduleAsync(first, second);
+        return Results.Ok(new { taskId });
     }
 );
 
