@@ -13,29 +13,29 @@ public class Factory
         _loggerFactory = loggerFactory;
     }
 
-    private static ProducerConfig CreateProducerConfig(IReadOnlyCollection<string> hosts) =>
+    private static ProducerConfig CreateProducerConfig(string hosts) =>
         new ProducerConfig
         {
-            BootstrapServers = string.Join(",", hosts),
+            BootstrapServers = hosts,
             AllowAutoCreateTopics = false,
             Acks = Acks.All,
         };
 
-    private static ConsumerConfig CreateConsumerConfig(IReadOnlyCollection<string> hosts) =>
+    private static ConsumerConfig CreateConsumerConfig(string hosts) =>
         new ConsumerConfig
         {
-            BootstrapServers = string.Join(",", hosts),
+            BootstrapServers = hosts,
             GroupId = "matrix-multipliers",
             AutoOffsetReset = AutoOffsetReset.Earliest,
         };
 
-    public IJobProducer CreateProducer(IReadOnlyCollection<string> hosts)
+    public IJobProducer CreateProducer(string hosts)
     {
         var config = CreateProducerConfig(hosts);
         return new JobProducer(_loggerFactory.CreateLogger<JobProducer>(), Topic, config);
     }
 
-    public IJobConsumer CreateConsumer(IReadOnlyCollection<string> hosts)
+    public IJobConsumer CreateConsumer(string hosts)
     {
         var config = CreateConsumerConfig(hosts);
         return new JobConsumer(

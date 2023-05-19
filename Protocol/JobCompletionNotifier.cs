@@ -1,6 +1,8 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 
+namespace Protocol;
+
 internal class JobCompletionNotifier
 {
     private readonly ILogger<JobCompletionNotifier> _logger;

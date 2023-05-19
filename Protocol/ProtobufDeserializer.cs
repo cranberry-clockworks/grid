@@ -1,6 +1,8 @@
 using Confluent.Kafka;
 using ProtoBuf;
 
+namespace Protocol;
+
 internal class ProtobufDeserializer<T> : IDeserializer<T>
 {
     public T Deserialize(

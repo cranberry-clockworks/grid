@@ -1,5 +1,7 @@
 using ProtoBuf;
 
+namespace Protocol;
+
 [ProtoContract]
 public class Description
 {

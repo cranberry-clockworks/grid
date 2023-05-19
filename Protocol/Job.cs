@@ -1,13 +1,20 @@
+namespace Protocol;
+
 public class Job
 {
     private readonly JobCompletionNotifier _notifier;
 
-    internal Job(JobCompletionNotifier notifier, Description description, Payload job)
+    public Description Description { get; }
+    public Payload Payload { get; }
+
+    internal Job(JobCompletionNotifier notifier, Description description, Payload payload)
     {
         _notifier = notifier;
+        Description = description;
+        Payload = payload;
     }
 
-    void MarkAsCompleted()
+    public void MarkAsCompleted()
     {
         _notifier.MarkJobAsComplete();
     }

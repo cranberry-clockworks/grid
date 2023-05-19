@@ -1,6 +1,8 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 
+namespace Protocol;
+
 internal sealed class JobProducer : IJobProducer
 {
     private readonly ILogger<JobProducer> _logger;
