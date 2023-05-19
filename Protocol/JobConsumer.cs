@@ -28,7 +28,7 @@ internal sealed class JobConsumer : IJobConsumer, IDisposable
         _consumerLogger.LogInformation("Subscribed to the topic: {Topic}", topic);
     }
 
-    public IEnumerable<Job> ConsumedAsync(CancellationToken token = default)
+    public IEnumerable<Job> ConsumedJobs(CancellationToken token = default)
     {
         _consumer.Subscribe(_topic);
         _consumerLogger.LogInformation("Subscribed to the topic: {Topic}", _topic);
@@ -38,20 +38,7 @@ internal sealed class JobConsumer : IJobConsumer, IDisposable
             Job job;
             try
             {
-                var item = _consumer.Consume(token);
-                _consumerLogger.LogInformation(
-                    "Consumed an item form the queue. JobId: {JobId}, Row: {Row}, Column: {Column}, RowLength: {RowLength}, ColumnLength: {ColumnLength}",
-                    item.Message.Key.JobId,
-                    item.Message.Key.Row,
-                    item.Message.Key.Column,
-                    item.Message.Value.Row.Length,
-                    item.Message.Value.Column.Length
-                );
-                job = new Job(
-                    new JobCompletionNotifier(_notifierLogger, _consumer, item),
-                    item.Message.Key,
-                    item.Message.Value
-                );
+                job = ConsumeJob(token);
             }
             catch (ConsumeException e)
             {
@@ -64,8 +51,29 @@ internal sealed class JobConsumer : IJobConsumer, IDisposable
             }
             yield return job;
         }
+
         _consumer.Close();
         _consumerLogger.LogInformation("Unsubscribed from the topic: {Topic}", _topic);
+    }
+
+    private Job ConsumeJob(CancellationToken token)
+    {
+        Job job;
+        var item = _consumer.Consume(token);
+        _consumerLogger.LogInformation(
+            "Consumed an item form the queue. JobId: {JobId}, Row: {Row}, Column: {Column}, RowLength: {RowLength}, ColumnLength: {ColumnLength}",
+            item.Message.Key.JobId,
+            item.Message.Key.Row,
+            item.Message.Key.Column,
+            item.Message.Value.Row.Length,
+            item.Message.Value.Column.Length
+        );
+        job = new Job(
+            new JobCompletionNotifier(_notifierLogger, _consumer, item),
+            item.Message.Key,
+            item.Message.Value
+        );
+        return job;
     }
 
     public void Dispose()
