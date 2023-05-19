@@ -19,6 +19,7 @@ internal class Processor
             if (IsValid(job))
             {
                 Process(job);
+                continue;
             }
 
             _logger.LogError(

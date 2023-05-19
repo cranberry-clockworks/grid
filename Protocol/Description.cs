@@ -8,7 +8,7 @@ public class Description
     [ProtoMember(1)]
     public Guid JobId { get; init; }
 
-    [ProtoMember(1)]
+    [ProtoMember(2)]
     public int Row { get; init; }
 
     [ProtoMember(3)]

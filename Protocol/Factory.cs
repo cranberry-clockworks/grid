@@ -17,7 +17,7 @@ public class Factory
         new ProducerConfig
         {
             BootstrapServers = hosts,
-            AllowAutoCreateTopics = false,
+            AllowAutoCreateTopics = true,
             Acks = Acks.All,
         };
 
@@ -27,6 +27,8 @@ public class Factory
             BootstrapServers = hosts,
             GroupId = "matrix-multipliers",
             AutoOffsetReset = AutoOffsetReset.Earliest,
+            AllowAutoCreateTopics = false,
+            Acks = Acks.All,
         };
 
     public IJobProducer CreateProducer(string hosts)
