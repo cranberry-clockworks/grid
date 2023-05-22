@@ -27,7 +27,6 @@ public class Factory
             BootstrapServers = hosts,
             GroupId = "matrix-multipliers",
             AutoOffsetReset = AutoOffsetReset.Earliest,
-            AllowAutoCreateTopics = false,
             Acks = Acks.All,
         };
 
