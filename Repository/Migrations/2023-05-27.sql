@@ -20,6 +20,26 @@ CREATE TABLE Values
         ON DELETE CASCADE
 );
 
+CREATE OR REPLACE FUNCTION CheckRange()
+  RETURNS TRIGGER AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM Matricies
+    WHERE NEW.id = id AND NEW.row >= 0 AND NEW.row < rows AND NEW.column >= 0 AND NEW.column < columns
+  ) THEN
+    RETURN NEW;
+  ELSE
+    RAISE EXCEPTION 'The inserted index is not within the valid range.';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ValidateRange
+  BEFORE INSERT ON Values
+  FOR EACH ROW
+  EXECUTE FUNCTION CheckRange();
+
 CREATE INDEX MatriciesIdIndex
     ON Matricies USING btree
     ("id");
