@@ -11,6 +11,7 @@
         "tags": [
           "Repository, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
         ],
+        "operationId": "CreateMatrix",
         "requestBody": {
           "content": {
             "application/json": {
@@ -22,8 +23,31 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatrixCreationResult"
+                }
+              }
+            }
           }
         }
       }
@@ -33,6 +57,7 @@
         "tags": [
           "Repository, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
         ],
+        "operationId": "IsMatrixComputed",
         "parameters": [
           {
             "name": "id",
@@ -47,7 +72,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputationState"
+                }
+              }
+            }
           }
         }
       }
@@ -55,6 +87,19 @@
   },
   "components": {
     "schemas": {
+      "ComputationState": {
+        "type": "object",
+        "properties": {
+          "matrixId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isComputed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "MatrixCreationOptions": {
         "type": "object",
         "properties": {
@@ -69,6 +114,16 @@
           "hash": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MatrixCreationResult": {
+        "type": "object",
+        "properties": {
+          "matrixId": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

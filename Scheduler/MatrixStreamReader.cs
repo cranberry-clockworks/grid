@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Scheduler;
@@ -41,5 +42,23 @@ internal class MatrixStreamReader
     public void StartAgain()
     {
         _stream.Seek(_start, SeekOrigin.Begin);
+    }
+
+    public string ComputeHash()
+    {
+        string result;
+        using (var hash = SHA256.Create())
+        {
+            var bytes = hash.ComputeHash(_stream);
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                builder.Append(bytes[i].ToString("x2"));
+            }
+
+            result = builder.ToString();
+        }
+        StartAgain();
+        return result;
     }
 }

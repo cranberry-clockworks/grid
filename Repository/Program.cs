@@ -65,7 +65,10 @@ app.MapPost(
             return Results.Created($"matricies/{id}", new MatrixCreationResult(id));
         }
     )
-    .WithOpenApi();
+    .WithOpenApi()
+    .Produces<IDictionary<string, string[]>>(StatusCodes.Status400BadRequest)
+    .Produces<MatrixCreationResult>(StatusCodes.Status201Created)
+    .WithName("CreateMatrix");
 
 // TODO
 // app.MapGet("/matricies/{id}", () => { });
@@ -77,6 +80,8 @@ app.MapGet(
             return Results.Ok(new ComputationState(id, await repository.IsComputedAsync(id)));
         }
     )
-    .WithOpenApi();
+    .WithOpenApi()
+    .Produces<ComputationState>(StatusCodes.Status200OK)
+    .WithName("IsMatrixComputed");
 
 app.Run();

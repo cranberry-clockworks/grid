@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Protocol;
-using Scheduler.Repository;
 
 namespace Scheduler;
 
@@ -21,14 +20,12 @@ internal class Distributor
         _producer = producer;
     }
 
-    public async Task<Guid> ScheduleAsync(MatrixStreamReader first, MatrixStreamReader second)
+    public async Task ScheduleAsync(int id, MatrixStreamReader first, MatrixStreamReader second)
     {
         Debug.Assert(first.Columns == second.Rows);
 
         var rows = first.Rows;
         var columns = second.Columns;
-
-        var id = _repository.Create(rows, columns);
 
         for (var row = 0; row < rows; ++row)
         {
@@ -48,8 +45,6 @@ internal class Distributor
 
             await Task.WhenAll(tasks);
         }
-
-        return id;
     }
 
     private async Task ScheduleSingleValueAsync(
