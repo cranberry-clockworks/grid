@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using Protocol;
 using Repository;
 using Repository.Models;
 using Repository.Validations;
@@ -10,6 +11,7 @@ using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(
     c =>
@@ -23,6 +25,16 @@ builder.Services.AddSwaggerGen(
             }
         )
 );
+
+builder.Services.Configure<KafkaOptions>(
+    o => builder.Configuration.GetRequiredSection(KafkaOptions.SectionName).Bind(o)
+);
+builder.Services.AddSingleton<IConsumer<ComputedResultKey, ComputedResultValue>>(services =>
+{
+    var options = services.GetRequiredService<IOptions<KafkaOptions>>();
+    var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+    return new Factory(loggerFactory).CreateComputedResultConsumer(options.Value);
+});
 builder.Services.Configure<DatabaseOptions>(o => o.With(builder.Configuration));
 builder.Services.AddTransient<DatabaseMigrator>();
 builder.Services.AddTransient<IDbConnection>(

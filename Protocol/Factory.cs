@@ -36,9 +36,11 @@ public class Factory
             EnableAutoCommit = false
         };
 
-    public IProducer<ComputeTaskKey, ComputeTaskValue> CreateComputeTaskProducer(string hosts)
+    public IProducer<ComputeTaskKey, ComputeTaskValue> CreateComputeTaskProducer(
+        KafkaOptions options
+    )
     {
-        var config = CreateProducerConfig(hosts);
+        var config = CreateProducerConfig(options.Hosts);
         return new Producer<ComputeTaskKey, ComputeTaskValue>(
             _loggerFactory.CreateLogger<Producer<ComputeTaskKey, ComputeTaskValue>>(),
             ComputeTaskTopic,
@@ -46,9 +48,11 @@ public class Factory
         );
     }
 
-    public IConsumer<ComputeTaskKey, ComputeTaskValue> CreateComputeTaskConsumer(string hosts)
+    public IConsumer<ComputeTaskKey, ComputeTaskValue> CreateComputeTaskConsumer(
+        KafkaOptions options
+    )
     {
-        var config = CreateConsumerConfig(hosts, ComputeTaskGroupId);
+        var config = CreateConsumerConfig(options.Hosts, ComputeTaskGroupId);
         return new Consumer<ComputeTaskKey, ComputeTaskValue>(
             _loggerFactory.CreateLogger<Consumer<ComputeTaskKey, ComputeTaskValue>>(),
             _loggerFactory.CreateLogger<MessageCommiter<ComputeTaskKey, ComputeTaskValue>>(),
@@ -58,10 +62,10 @@ public class Factory
     }
 
     public IProducer<ComputedResultKey, ComputedResultValue> CreateComputedResultProducer(
-        string hosts
+        KafkaOptions options
     )
     {
-        var config = CreateProducerConfig(hosts);
+        var config = CreateProducerConfig(options.Hosts);
         return new Producer<ComputedResultKey, ComputedResultValue>(
             _loggerFactory.CreateLogger<Producer<ComputedResultKey, ComputedResultValue>>(),
             ComputeTaskTopic,
@@ -70,10 +74,10 @@ public class Factory
     }
 
     public IConsumer<ComputedResultKey, ComputedResultValue> CreateComputedResultConsumer(
-        string hosts
+        KafkaOptions options
     )
     {
-        var config = CreateConsumerConfig(hosts, ComputedResultGropuId);
+        var config = CreateConsumerConfig(options.Hosts, ComputedResultGropuId);
         return new Consumer<ComputedResultKey, ComputedResultValue>(
             _loggerFactory.CreateLogger<Consumer<ComputedResultKey, ComputedResultValue>>(),
             _loggerFactory.CreateLogger<MessageCommiter<ComputedResultKey, ComputedResultValue>>(),

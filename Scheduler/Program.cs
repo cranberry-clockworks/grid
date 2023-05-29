@@ -8,9 +8,15 @@ builder.Configuration.AddEnvironmentVariables();
 
 builder.Logging.AddConsole();
 
-builder.Services.AddSingleton<IProducer<ComputeTaskKey, ComputeTaskValue>>(
-    JobProducerFactory.Create
+builder.Services.Configure<KafkaOptions>(
+    o => builder.Configuration.GetRequiredSection(KafkaOptions.SectionName).Bind(o)
 );
+builder.Services.AddSingleton<IProducer<ComputeTaskKey, ComputeTaskValue>>(services =>
+{
+    var options = services.GetRequiredService<IOptions<KafkaOptions>>();
+    var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+    return new Factory(loggerFactory).CreateComputeTaskProducer(options.Value);
+});
 builder.Services.Configure<MatrixRepositoryOptions>(o => o.With(builder.Configuration));
 builder.Services
     .AddHttpClient<IMatrixRepository, MatrixRepository>(
