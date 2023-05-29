@@ -12,16 +12,16 @@ parser.add_argument(
     help="the path to file containing the generated matrix"
 )
 parser.add_argument(
-    "--width",
+    "--rows",
     type=int,
     required=True,
-    help="width of the generated matrix"
+    help="number of rows of the generated matrix"
 )
 parser.add_argument(
-    "--height",
+    "--columns",
     type=int,
     required=True,
-    help="height of the generated matrix"
+    help="number of columns of the generated matrix"
 )
 parser.add_argument(
     "-z",
@@ -33,13 +33,16 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+value = 1.0
+
 with open(args.output, "wb") as file:
-    file.write(struct.pack("i", args.width))
-    file.write(struct.pack("i", args.height))
+    file.write(struct.pack("i", args.rows))
+    file.write(struct.pack("i", args.columns))
     if args.zero:
-        for row in range(args.height):
-            file.write(array.array("d", [0] * args.width))
+        for row in range(args.rows):
+            file.write(array.array("d", [0] * args.columns))
     else:
-        for row in range(args.height):
-            for cell in range(args.width):
-                file.write(struct.pack("d", random.uniform(-1e6, 1e6)))
+        for row in range(args.rows):
+            for cell in range(args.columns):
+                file.write(struct.pack("d", value))
+                value += 1
