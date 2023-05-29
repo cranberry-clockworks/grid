@@ -1,13 +1,28 @@
-using System.Data;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using Npgsql;
 using Repository;
-using FluentValidation;
+using Repository.Models;
 using Repository.Validations;
+using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(
+    c =>
+        c.SwaggerDoc(
+            "v1",
+            new OpenApiInfo
+            {
+                Title = "Matrix Repository Api",
+                Description = "API to create and receive computed matricies",
+                Version = "1.0.0"
+            }
+        )
+);
 builder.Services.Configure<DatabaseOptions>(o => o.With(builder.Configuration));
 builder.Services.AddTransient<DatabaseMigrator>();
 builder.Services.AddTransient<IDbConnection>(
@@ -17,8 +32,15 @@ builder.Services.AddTransient<IDbConnection>(
         )
 );
 builder.Services.AddTransient<IMatrixRepository, MatrixRepository>();
-builder.Services.AddScoped<IValidator<CreateOptions>, CreateOptionsValidator>();
+builder.Services.AddScoped<IValidator<MatrixCreationOptions>, MatrixCreationOptionsValidator>();
+
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 using (var scope = app.Services.CreateScope())
 {
@@ -26,22 +48,35 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.MapPost(
-    "/matricies",
-    async (
-        [FromServices] IMatrixRepository repository,
-        [FromServices] IValidator<CreateOptions> validator,
-        [FromBody] CreateOptions options
-    ) =>
-    {
-        var validationResult = await validator.ValidateAsync(options);
-        if (!validationResult.IsValid)
+        "/matricies",
+        async (
+            [FromServices] IMatrixRepository repository,
+            [FromServices] IValidator<MatrixCreationOptions> validator,
+            [FromBody] MatrixCreationOptions options
+        ) =>
         {
-            return Results.ValidationProblem(validationResult.ToDictionary());
-        }
+            var validationResult = await validator.ValidateAsync(options);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
 
-        var id = await repository.CreateAsync(options.Rows, options.Columns, options.Hash);
-        return Results.Created($"matricies/{id}", id);
-    }
-);
+            var id = await repository.CreateAsync(options.Rows, options.Columns, options.Hash);
+            return Results.Created($"matricies/{id}", new MatrixCreationResult(id));
+        }
+    )
+    .WithOpenApi();
+
+// TODO
+// app.MapGet("/matricies/{id}", () => { });
+
+app.MapGet(
+        "/matricices/{id}/computed",
+        async ([FromServices] IMatrixRepository repository, [FromRoute] int id) =>
+        {
+            return Results.Ok(new ComputationState(id, await repository.IsComputedAsync(id)));
+        }
+    )
+    .WithOpenApi();
 
 app.Run();

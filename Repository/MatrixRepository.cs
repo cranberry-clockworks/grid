@@ -1,6 +1,5 @@
 using System.Data;
 using Dapper;
-using Repository.Models;
 
 namespace Repository;
 
@@ -49,9 +48,9 @@ internal class MatrixRepository : IMatrixRepository
             .FirstOrDefault();
     }
 
-    public bool IsComputed(int id) =>
-        _connection
-            .Query(
+    public async Task<bool> IsComputedAsync(int id) =>
+        (
+            await _connection.QueryAsync(
                 """
             SELECT m.id
             FROM Matricies m
@@ -63,10 +62,10 @@ internal class MatrixRepository : IMatrixRepository
             """,
                 new { Id = id }
             )
-            .Any();
+        ).Any();
 
-    public void Remove(int id) =>
-        _connection.Query("DELETE FROM Matricies WHERE id = @id", new { Id = id });
+    public async Task RemoveAsync(int id) =>
+        await _connection.QueryAsync("DELETE FROM Matricies WHERE id = @id", new { Id = id });
 
     public void Update(int id, int row, int column, double newValue) =>
         _connection.Query(

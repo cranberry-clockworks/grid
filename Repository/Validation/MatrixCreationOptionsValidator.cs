@@ -1,10 +1,11 @@
 using FluentValidation;
+using Repository.Models;
 
 namespace Repository.Validations;
 
-internal class CreateOptionsValidator : AbstractValidator<CreateOptions>
+internal class MatrixCreationOptionsValidator : AbstractValidator<MatrixCreationOptions>
 {
-    public CreateOptionsValidator()
+    public MatrixCreationOptionsValidator()
     {
         RuleFor(o => o.Rows).GreaterThanOrEqualTo(0);
         RuleFor(o => o.Columns).GreaterThanOrEqualTo(0);
