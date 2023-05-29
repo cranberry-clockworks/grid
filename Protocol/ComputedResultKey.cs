@@ -3,10 +3,10 @@ using ProtoBuf;
 namespace Protocol;
 
 [ProtoContract]
-public class Description
+public class ComputedResultKey
 {
     [ProtoMember(1)]
-    public Guid JobId { get; init; }
+    public int MatrixId { get; init; }
 
     [ProtoMember(2)]
     public int Row { get; init; }

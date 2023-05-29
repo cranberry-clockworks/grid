@@ -3,7 +3,7 @@ using ProtoBuf;
 namespace Protocol;
 
 [ProtoContract]
-public class Payload
+public class ComputeTaskValue
 {
     [ProtoMember(1)]
     public double[] Row { get; init; } = Array.Empty<double>();

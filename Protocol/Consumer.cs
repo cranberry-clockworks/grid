@@ -3,17 +3,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Protocol;
 
-internal sealed class JobConsumer : IJobConsumer, IDisposable
+internal sealed class Consumer<TKey, TValue> : IConsumer<TKey, TValue>, IDisposable
 {
-    private readonly ILogger<JobCompletionNotifier> _notifierLogger;
+    private readonly ILogger<MessageCommiter<TKey, TValue>> _notifierLogger;
     private readonly ILogger _consumerLogger;
 
     private readonly string _topic;
-    private readonly IConsumer<Description, Payload> _consumer;
+    private readonly Confluent.Kafka.IConsumer<TKey, TValue> _consumer;
 
-    public JobConsumer(
-        ILogger<JobConsumer> consumerLogger,
-        ILogger<JobCompletionNotifier> notifierLogger,
+    public Consumer(
+        ILogger<Consumer<TKey, TValue>> consumerLogger,
+        ILogger<MessageCommiter<TKey, TValue>> notifierLogger,
         string topic,
         ConsumerConfig config
     )
@@ -22,25 +22,27 @@ internal sealed class JobConsumer : IJobConsumer, IDisposable
         _notifierLogger = notifierLogger;
 
         _topic = topic;
-        _consumer = new ConsumerBuilder<Description, Payload>(config)
-            .SetKeyDeserializer(new ProtobufDeserializer<Description>())
-            .SetValueDeserializer(new ProtobufDeserializer<Payload>())
+        _consumer = new ConsumerBuilder<TKey, TValue>(config)
+            .SetKeyDeserializer(new ProtobufDeserializer<TKey>())
+            .SetValueDeserializer(new ProtobufDeserializer<TValue>())
             .Build();
 
         _consumerLogger.LogInformation("Subscribed to the topic: {Topic}", topic);
     }
 
-    public IEnumerable<Job> ConsumedJobs(CancellationToken token = default)
+    public IEnumerable<Consumable<TKey, TValue>> EnumerateConsumable(
+        CancellationToken token = default
+    )
     {
         _consumer.Subscribe(_topic);
         _consumerLogger.LogInformation("Subscribed to the topic: {Topic}", _topic);
 
         while (!token.IsCancellationRequested)
         {
-            Job job;
+            Consumable<TKey, TValue> consumable;
             try
             {
-                job = ConsumeJob(token);
+                consumable = Consume(token);
             }
             catch (ConsumeException e)
             {
@@ -51,31 +53,29 @@ internal sealed class JobConsumer : IJobConsumer, IDisposable
             {
                 break;
             }
-            yield return job;
+            yield return consumable;
         }
 
         _consumer.Close();
         _consumerLogger.LogInformation("Unsubscribed from the topic: {Topic}", _topic);
     }
 
-    private Job ConsumeJob(CancellationToken token)
+    private Consumable<TKey, TValue> Consume(CancellationToken token)
     {
-        Job job;
+        Consumable<TKey, TValue> consumable;
         var item = _consumer.Consume(token);
         _consumerLogger.LogInformation(
-            "Consumed an item form the queue. JobId: {JobId}, Row: {Row}, Column: {Column}, RowLength: {RowLength}, ColumnLength: {ColumnLength}",
-            item.Message.Key.JobId,
-            item.Message.Key.Row,
-            item.Message.Key.Column,
-            item.Message.Value.Row.Length,
-            item.Message.Value.Column.Length
-        );
-        job = new Job(
-            new JobCompletionNotifier(_notifierLogger, _consumer, item),
+            "Fetched item. Topic: {Topic} Key: {Key} Value: {Value}",
+            _topic,
             item.Message.Key,
             item.Message.Value
         );
-        return job;
+        consumable = new Consumable<TKey, TValue>(
+            new MessageCommiter<TKey, TValue>(_notifierLogger, _consumer, item),
+            item.Message.Key,
+            item.Message.Value
+        );
+        return consumable;
     }
 
     public void Dispose()

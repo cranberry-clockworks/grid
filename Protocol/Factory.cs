@@ -28,20 +28,25 @@ public class Factory
             GroupId = "matrix-multipliers",
             AutoOffsetReset = AutoOffsetReset.Earliest,
             Acks = Acks.All,
+            EnableAutoCommit = false
         };
 
-    public IJobProducer CreateProducer(string hosts)
+    public IProducer<ComputeTaskKey, ComputeTaskValue> CreateComputeTaskProducer(string hosts)
     {
         var config = CreateProducerConfig(hosts);
-        return new JobProducer(_loggerFactory.CreateLogger<JobProducer>(), Topic, config);
+        return new Producer<ComputeTaskKey, ComputeTaskValue>(
+            _loggerFactory.CreateLogger<Producer<ComputeTaskKey, ComputeTaskValue>>(),
+            Topic,
+            config
+        );
     }
 
-    public IJobConsumer CreateConsumer(string hosts)
+    public IConsumer<ComputeTaskKey, ComputeTaskValue> CreateComputeTaskConsumer(string hosts)
     {
         var config = CreateConsumerConfig(hosts);
-        return new JobConsumer(
-            _loggerFactory.CreateLogger<JobConsumer>(),
-            _loggerFactory.CreateLogger<JobCompletionNotifier>(),
+        return new Consumer<ComputeTaskKey, ComputeTaskValue>(
+            _loggerFactory.CreateLogger<Consumer<ComputeTaskKey, ComputeTaskValue>>(),
+            _loggerFactory.CreateLogger<MessageCommiter<ComputeTaskKey, ComputeTaskValue>>(),
             Topic,
             config
         );
