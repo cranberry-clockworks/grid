@@ -19,11 +19,12 @@ internal sealed class Producer<TKey, TValue> : IProducer<TKey, TValue>
             .Build();
     }
 
-    public async Task ProduceAsync(TKey key, TValue value)
+    public async Task ProduceAsync(TKey key, TValue value, CancellationToken token)
     {
         var result = await _producer.ProduceAsync(
             _topic,
-            new Message<TKey, TValue>() { Key = key, Value = value }
+            new Message<TKey, TValue>() { Key = key, Value = value },
+            token
         );
         _logger.LogInformation(
             "Produced item. Topic: {Topic}, Key: {JobId}, Value: {Row}",

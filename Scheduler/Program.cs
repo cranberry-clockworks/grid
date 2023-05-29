@@ -9,7 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.AddConsole();
 builder.Configuration.AddEnvironmentVariables();
-builder.Services.AddSingleton<IJobProducer>(JobProducerFactory.Create);
+builder.Services.AddSingleton<IProducer<ComputeTaskKey, ComputeTaskValue>>(
+    JobProducerFactory.Create
+);
 builder.Services.AddSingleton<IMatrixRepository, MatrixRepository>();
 builder.Services.AddSingleton<Distributor>();
 builder.Services.AddScoped<MatrixFilesValidator>();

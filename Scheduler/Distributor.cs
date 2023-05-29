@@ -8,12 +8,12 @@ internal class Distributor
 {
     private readonly ILogger _logger;
     private readonly IMatrixRepository _repository;
-    private readonly IJobProducer _producer;
+    private readonly IProducer<ComputeTaskKey, ComputeTaskValue> _producer;
 
     public Distributor(
         ILogger<Distributor> logger,
         IMatrixRepository repository,
-        IJobProducer producer
+        IProducer<ComputeTaskKey, ComputeTaskValue> producer
     )
     {
         _logger = logger;
@@ -62,15 +62,15 @@ internal class Distributor
     {
         Debug.Assert(rowValues.Length == columnValues.Length);
 
-        var description = new Description()
+        var key = new ComputeTaskKey()
         {
             JobId = guid,
             Row = row,
             Column = column,
         };
 
-        var payload = new Payload() { Row = rowValues, Column = columnValues, };
+        var value = new ComputeTaskValue() { Row = rowValues, Column = columnValues, };
 
-        await _producer.PublishAsync(description, payload);
+        await _producer.ProduceAsync(key, value, CancellationToken.None);
     }
 }
