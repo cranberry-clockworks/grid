@@ -10,4 +10,7 @@ public class ComputeTaskValue
 
     [ProtoMember(2)]
     public double[] Column { get; init; } = Array.Empty<double>();
+
+    public override string? ToString() =>
+        new { RowLength = Row.Length, ColumnLength = Column.Length }.ToString();
 }

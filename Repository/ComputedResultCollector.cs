@@ -22,13 +22,17 @@ internal class ComputedResultCollector : BackgroundService
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        foreach (var consumable in _consumer.EnumerateConsumable(stoppingToken))
+        Task.Run(() => Collect(stoppingToken), stoppingToken);
+        return Task.CompletedTask;
+    }
+
+    private void Collect(CancellationToken token)
+    {
+        foreach (var consumable in _consumer.EnumerateConsumable(token))
         {
             UpdateValue(consumable);
             consumable.Commit();
         }
-
-        return Task.CompletedTask;
     }
 
     private void UpdateValue(Consumable<ComputedResultKey, ComputedResultValue> consumable)

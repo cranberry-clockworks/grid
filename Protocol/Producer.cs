@@ -27,7 +27,7 @@ internal sealed class Producer<TKey, TValue> : IProducer<TKey, TValue>
             token
         );
         _logger.LogInformation(
-            "Produced item. Topic: {Topic}, Key: {JobId}, Value: {Row}",
+            "Produced item. Topic: {Topic}, Key: {Key}, Value: {Value}",
             _topic,
             key,
             value

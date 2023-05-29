@@ -65,7 +65,7 @@ internal sealed class Consumer<TKey, TValue> : IConsumer<TKey, TValue>, IDisposa
         Consumable<TKey, TValue> consumable;
         var item = _consumer.Consume(token);
         _consumerLogger.LogInformation(
-            "Fetched item. Topic: {Topic} Key: {Key} Value: {Value}",
+            "Fetched item. Topic: {Topic} Key: {Key}, Value: {Value}",
             _topic,
             item.Message.Key,
             item.Message.Value

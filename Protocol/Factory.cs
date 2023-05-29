@@ -68,7 +68,7 @@ public class Factory
         var config = CreateProducerConfig(options.Hosts);
         return new Producer<ComputedResultKey, ComputedResultValue>(
             _loggerFactory.CreateLogger<Producer<ComputedResultKey, ComputedResultValue>>(),
-            ComputeTaskTopic,
+            ComputedResultTopic,
             config
         );
     }
@@ -81,7 +81,7 @@ public class Factory
         return new Consumer<ComputedResultKey, ComputedResultValue>(
             _loggerFactory.CreateLogger<Consumer<ComputedResultKey, ComputedResultValue>>(),
             _loggerFactory.CreateLogger<MessageCommiter<ComputedResultKey, ComputedResultValue>>(),
-            ComputeTaskTopic,
+            ComputedResultTopic,
             config
         );
     }

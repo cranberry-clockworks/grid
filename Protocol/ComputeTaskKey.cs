@@ -13,4 +13,12 @@ public class ComputeTaskKey
 
     [ProtoMember(3)]
     public int Column { get; init; }
+
+    public override string? ToString() =>
+        new
+        {
+            MatrixId,
+            Row,
+            Column
+        }.ToString();
 }

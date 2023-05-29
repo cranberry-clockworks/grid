@@ -45,6 +45,7 @@ builder.Services.AddTransient<IDbConnection>(
 );
 builder.Services.AddTransient<IMatrixRepository, MatrixRepository>();
 builder.Services.AddScoped<IValidator<MatrixCreationOptions>, MatrixCreationOptionsValidator>();
+builder.Services.AddHostedService<ComputedResultCollector>();
 
 var app = builder.Build();
 
