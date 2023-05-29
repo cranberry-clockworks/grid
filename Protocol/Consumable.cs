@@ -14,7 +14,7 @@ public record Consumable<TKey, TValue>
         Value = value;
     }
 
-    void Commit()
+    public void Commit()
     {
         _notifier.Commit();
     }
