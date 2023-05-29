@@ -1,7 +1,10 @@
 using System.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Repository;
+using FluentValidation;
+using Repository.Validations;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
@@ -14,22 +17,31 @@ builder.Services.AddTransient<IDbConnection>(
         )
 );
 builder.Services.AddTransient<IMatrixRepository, MatrixRepository>();
+builder.Services.AddScoped<IValidator<CreateOptions>, CreateOptionsValidator>();
 var app = builder.Build();
-
-app.MapGet("/", () => "Hello World!");
 
 using (var scope = app.Services.CreateScope())
 {
     scope.ServiceProvider.GetRequiredService<DatabaseMigrator>().Migrate();
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    var r = scope.ServiceProvider.GetRequiredService<IMatrixRepository>();
-    var id = r.Create(5, 5, "FOO");
-    r.Update(id, 0, 0, 10);
-    r.Update(id, 0, 0, 20);
-    r.Update(id, 0, 7, 10);
-}
+app.MapPost(
+    "/matricies",
+    async (
+        [FromServices] IMatrixRepository repository,
+        [FromServices] IValidator<CreateOptions> validator,
+        [FromBody] CreateOptions options
+    ) =>
+    {
+        var validationResult = await validator.ValidateAsync(options);
+        if (!validationResult.IsValid)
+        {
+            return Results.ValidationProblem(validationResult.ToDictionary());
+        }
+
+        var id = await repository.CreateAsync(options.Rows, options.Columns, options.Hash);
+        return Results.Created($"matricies/{id}", id);
+    }
+);
 
 app.Run();

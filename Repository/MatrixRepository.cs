@@ -13,7 +13,7 @@ internal class MatrixRepository : IMatrixRepository
         _connection = connection;
     }
 
-    public int Create(int rows, int columns, string hash)
+    public async Task<int> CreateAsync(int rows, int columns, string hash)
     {
         var args = new
         {
@@ -22,15 +22,16 @@ internal class MatrixRepository : IMatrixRepository
             Hash = hash
         };
 
-        var hashed = _connection
-            .Query<int>(
+        var hashed = (
+            await _connection.QueryAsync<int>(
                 """
                 SELECT id from Matricies
                 WHERE rows = @Rows AND columns = @Columns AND hash = @Hash;
                 """,
                 args
             )
-            .ToList();
+        ).ToList();
+
         if (hashed.Count != 0)
         {
             return hashed.First();
