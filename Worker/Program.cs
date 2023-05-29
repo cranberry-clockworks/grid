@@ -9,6 +9,10 @@ var logger = loggerFactory.CreateLogger<Program>();
 
 var kafkaHosts = config.GetValueOrThrow(Configuration.KafkaHosts);
 
-using var consumer = new Factory(loggerFactory).CreateComputeTaskConsumer(kafkaHosts);
+var factory = new Factory(loggerFactory);
+using var consumer = factory.CreateComputeTaskConsumer(kafkaHosts);
+using var producer = factory.CreateComputedResultProducer(kafkaHosts);
 
-new Processor(loggerFactory.CreateLogger<Processor>(), consumer).Run(CancellationToken.None);
+new Processor(loggerFactory.CreateLogger<Processor>(), consumer, producer).Run(
+    CancellationToken.None
+);

@@ -53,7 +53,7 @@ internal class Distributor
     }
 
     private async Task ScheduleSingleValueAsync(
-        Guid guid,
+        int matrixId,
         int row,
         int column,
         double[] rowValues,
@@ -64,7 +64,7 @@ internal class Distributor
 
         var key = new ComputeTaskKey()
         {
-            JobId = guid,
+            MatrixId = matrixId,
             Row = row,
             Column = column,
         };
