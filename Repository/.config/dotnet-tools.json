@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "isRoot": true,
+  "isRoot": false,
   "tools": {
     "swashbuckle.aspnetcore.cli": {
       "version": "6.5.0",
