@@ -1,5 +1,6 @@
 using System.Data;
 using Dapper;
+using Repository.Database;
 
 namespace Repository;
 
@@ -16,9 +17,9 @@ internal class MatrixRepository : IMatrixRepository
     {
         var args = new
         {
-            Rows = rows,
-            Columns = columns,
-            Hash = hash
+            rows,
+            columns,
+            hash
         };
 
         var hashed = (
@@ -60,12 +61,12 @@ internal class MatrixRepository : IMatrixRepository
                 WHERE v.id = m.id
             );
             """,
-                new { Id = id }
+                new { id }
             )
         ).Any();
 
     public async Task RemoveAsync(int id) =>
-        await _connection.QueryAsync("DELETE FROM Matricies WHERE id = @id", new { Id = id });
+        await _connection.QueryAsync("DELETE FROM Matricies WHERE id = @id", new { id });
 
     public void Update(int id, int row, int column, double newValue) =>
         _connection.Query(
@@ -77,10 +78,33 @@ internal class MatrixRepository : IMatrixRepository
             """,
             new
             {
-                Id = id,
-                Row = row,
-                Column = column,
+                id,
+                row,
+                column,
                 Value = newValue
             }
         );
+
+    public async Task<IEnumerable<double>> GetComputedValuesAsync(int id) =>
+        await _connection.QueryAsync<double>(
+            """
+            SELECT "value"
+            FROM Values
+            WHERE "id" = @Id
+            ORDER BY "row", "column";
+            """,
+            new { id }
+        );
+
+    public async Task<MatrixSize?> GetMatrixAsync(int id) =>
+        (
+            await _connection.QueryAsync<MatrixSize?>(
+                """
+            SELECT "rows", "columns"
+            FROM Matricies
+            WHERE "id" = @Id;
+            """,
+                new { id }
+            )
+        ).FirstOrDefault();
 }

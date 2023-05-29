@@ -83,9 +83,6 @@ app.MapPost(
     .Produces<MatrixCreationResult>(StatusCodes.Status201Created)
     .WithName("CreateMatrix");
 
-// TODO
-// app.MapGet("/matricies/{id}", () => { });
-
 app.MapGet(
         "/matricices/{id}/computed",
         async ([FromServices] IMatrixRepository repository, [FromRoute] int id) =>
@@ -96,5 +93,34 @@ app.MapGet(
     .WithOpenApi()
     .Produces<ComputationState>(StatusCodes.Status200OK)
     .WithName("IsMatrixComputed");
+
+app.MapGet(
+        "/matricies/{id}",
+        async ([FromServices] IMatrixRepository repository, [FromRoute] int id) =>
+        {
+            var size = await repository.GetMatrixAsync(id);
+            if (size == null)
+            {
+                return Results.NotFound(new { id });
+            }
+
+            if (!(await repository.IsComputedAsync(id)))
+            {
+                return Results.NoContent();
+            }
+
+            var values = await repository.GetComputedValuesAsync(id);
+            var bytes = MatrixSerializer.Serialize(size.Rows, size.Columns, values);
+            return Results.File(
+                bytes,
+                contentType: "application/octet-stream",
+                fileDownloadName: $"{id}"
+            );
+        }
+    )
+    .WithName("GetMatrix")
+    .Produces<byte[]>(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status204NoContent)
+    .Produces(StatusCodes.Status404NotFound);
 
 app.Run();

@@ -83,6 +83,45 @@
           }
         }
       }
+    },
+    "/matricies/{id}": {
+      "get": {
+        "tags": [
+          "Repository, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+        ],
+        "operationId": "GetMatrix",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "components": {
