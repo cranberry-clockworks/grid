@@ -1,0 +1,33 @@
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
+
+# Expected env values
+# Kafka connection string
+ENV Kafka__Hosts ='localhost:9092'
+# Postgres database string
+ENV ConnectionStrings__Postgres = "Server=127.0.0.1;Port=5432;Database=Repository;User Id=repository;Password=12345678;"
+
+WORKDIR /app
+
+# Copy everything
+COPY Protocol Protocol
+COPY Repository Repository
+
+WORKDIR /app/Repository
+
+# Restore as distinct layers
+RUN dotnet restore
+# Build and publish a release
+RUN dotnet publish -c Release -o ../out
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
+# Add an unprivileged user account for running the module
+RUN useradd -u 8877 container_user
+USER container_user
+
+WORKDIR /app
+COPY --from=build-env /app/out .
+
+EXPOSE 80
+
+ENTRYPOINT ["dotnet", "Repository.dll"]

@@ -26,7 +26,7 @@
     <ProjectReference Include="..\Protocol\Protocol.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Debug' ">
     <Exec Command="dotnet tool restore" />
     <Exec Command="dotnet swagger tofile --output openapi.json $(OutputPath)\$(AssemblyName).dll v1 " />
   </Target>
