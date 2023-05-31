@@ -52,7 +52,7 @@
         }
       }
     },
-    "/matricices/{id}/computed": {
+    "/matricies/{id}/computed": {
       "get": {
         "tags": [
           "Repository, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
