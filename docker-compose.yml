@@ -44,7 +44,7 @@ services:
       Kafka__Input__Hosts: broker:29092
       Kafka__Input__Topic: tasks
       Kafka__Output__Hosts: broker:29092
-      Kafka__Output__Topic: tasks
+      Kafka__Output__Topic: results
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
