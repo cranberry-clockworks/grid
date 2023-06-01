@@ -7,34 +7,44 @@ services:
       context: .
       dockerfile: dockerfile.repository
     depends_on:
-      - broker
+      kafka-startup:
+        condition: service_completed_successfully
+
     ports:
       - 22001:80
     environment:
-      - Kafka__Hosts=broker:9092
-      - ConnectionStrings__Postgres=Server=host.docker.internal;Port=5432;Database=Repository;User Id=repository;Password=12345678;
+      Kafka__Hosts: broker:29092
+      Kafka__Topic: results
+      ConnectionStrings__Postgres: Server=host.docker.internal;Port=5432;Database=Repository;User Id=repository;Password=12345678;
   scheduler:
     image: grid.scheduler:0.1
     build:
       context: .
       dockerfile: dockerfile.scheduler
     depends_on:
-      - broker
-      - repository
+      kafka-startup:
+        condition: service_completed_successfully
+      repository:
+        condition: service_started
     ports:
       - 22000:80
     environment:
-      - Kafka__Hosts=broker:9092
-      - MatrixRepository__Host=http://repository:80
+      Kafka__Hosts: broker:29092
+      Kafka__Topic: tasks
+      MatrixRepository__Host: http://repository:80
   worker:
     image: grid.worker:0.1
     build:
       context: .
       dockerfile: dockerfile.worker
     depends_on:
-      - broker
+      kafka-startup:
+        condition: service_completed_successfully
     environment:
-      - Kafka__Hosts=broker:9092
+      Kafka__Input__Hosts: broker:29092
+      Kafka__Input__Topic: tasks
+      Kafka__Output__Hosts: broker:29092
+      Kafka__Output__Topic: tasks
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
@@ -52,6 +62,8 @@ services:
     depends_on:
       - zookeeper
     environment:
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: false
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
@@ -59,3 +71,19 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    
+  kafka-startup:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - broker
+    entrypoint: ['/bin/sh', '-c']
+    command: |
+      "
+        kafka-topics --bootstrap-server broker:29092 --list
+
+        kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic tasks --partitions 100
+        kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic results --partitions 1
+
+        echo Created topics:
+        kafka-topics --bootstrap-server broker:29092 --list
+      "

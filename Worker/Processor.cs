@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Protocol;
 
+namespace Worker;
+
 internal class Processor
 {
     private readonly ILogger _logger;
