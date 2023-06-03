@@ -41,6 +41,6 @@ builder.Services.AddScoped<IValidator<IFormFileCollection>, MatrixFilesValidator
 
 var app = builder.Build();
 
-app.MapPost("/matrices", MatrixController.ScheduleAsync);
+app.MapPost("/product", MatrixController.ScheduleAsync);
 
 app.Run();

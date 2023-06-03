@@ -21,6 +21,4 @@ Console.CancelKeyPress += (_, e) =>
     cts.Cancel();
 };
 
-await new Processor(loggerFactory.CreateLogger<Processor>(), consumer, producer).RunAsync(
-    cts.Token
-);
+new Processor(loggerFactory.CreateLogger<Processor>(), consumer, producer).Run(cts.Token);

@@ -24,4 +24,15 @@ public interface IProducer<in TKey, in TValue> : IDisposable
     /// A token to cancel the operation.
     /// </param>
     Task ProduceAsync(TKey key, TValue value, CancellationToken token);
+
+    /// <summary>
+    /// Enqueues item into the queue.
+    /// </summary>
+    /// <param name="key">
+    /// The key of the item.
+    /// </param>
+    /// <param name="value">
+    /// The value of the item.
+    /// </param>
+    void Produce(TKey key, TValue value);
 }

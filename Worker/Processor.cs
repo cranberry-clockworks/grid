@@ -20,13 +20,13 @@ internal class Processor
         _producer = producer;
     }
 
-    public async Task RunAsync(CancellationToken token)
+    public void Run(CancellationToken token)
     {
-        await foreach (var consumable in _consumer.EnumerateConsumableAsync(token))
+        foreach (var consumable in _consumer.EnumerateConsumable(token))
         {
             if (IsValid(consumable.Value))
             {
-                await ProcessAsync(consumable, token);
+                Process(consumable);
             }
             else
             {
@@ -43,10 +43,7 @@ internal class Processor
 
     private bool IsValid(ComputeTaskValue value) => value.Row.Length == value.Column.Length;
 
-    private async Task ProcessAsync(
-        Consumed<ComputeTaskKey, ComputeTaskValue> consumed,
-        CancellationToken token
-    )
+    private void Process(Consumed<ComputeTaskKey, ComputeTaskValue> consumed)
     {
         using var logger = _logger.BeginScope(
             "Processing task. Id: {Id}, Row: {Row}, Column: {Column}",
@@ -59,15 +56,14 @@ internal class Processor
 
         _logger.LogTrace("Computed result: {Result}", result);
 
-        await _producer.ProduceAsync(
+        _producer.Produce(
             new ComputedResultKey
             {
                 MatrixId = consumed.Key.MatrixId,
                 Row = consumed.Key.Row,
                 Column = consumed.Key.Column
             },
-            new ComputedResultValue { Value = result },
-            token
+            new ComputedResultValue { Value = result }
         );
     }
 

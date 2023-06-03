@@ -57,6 +57,19 @@ internal sealed class Producer<TKey, TValue> : IProducer<TKey, TValue>
         );
     }
 
+    /// <inheritdoc />
+    public void Produce(TKey key, TValue value)
+    {
+        _producer.Produce(_topic, new Message<TKey, TValue>() { Key = key, Value = value });
+
+        _logger.LogInformation(
+            "Produced item. Topic: {Topic}, Key: {Key}, Value: {Value}",
+            _topic,
+            key,
+            value
+        );
+    }
+
     public void Dispose()
     {
         _producer.Dispose();

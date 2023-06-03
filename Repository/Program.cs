@@ -90,7 +90,7 @@ app.MapPost(
     .WithName("CreateMatrix");
 
 app.MapGet(
-        "/matrices/{id}/computed",
+        "/matrices/{id:int}/computed",
         async ([FromServices] IMatrixRepository repository, [FromRoute] int id) =>
             Results.Ok(new ComputationState(id, await repository.IsComputedAsync(id)))
     )

@@ -1,5 +1,4 @@
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 
@@ -57,13 +56,11 @@ internal sealed class Consumer<TKey, TValue> : IConsumer<TKey, TValue>
             .SetKeyDeserializer(new ProtobufDeserializer<TKey>())
             .SetValueDeserializer(new ProtobufDeserializer<TValue>())
             .Build();
-
-        _consumerLogger.LogInformation("Subscribed to the topic: {Topic}", topic);
     }
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<Consumed<TKey, TValue>> EnumerateConsumableAsync(
-        [EnumeratorCancellation] CancellationToken token = default
+    public IEnumerable<Consumed<TKey, TValue>> EnumerateConsumable(
+        CancellationToken token = default
     )
     {
         while (!token.IsCancellationRequested)
@@ -72,6 +69,7 @@ internal sealed class Consumer<TKey, TValue> : IConsumer<TKey, TValue>
             {
                 _consumer.Subscribe(_topic);
                 _consumerLogger.LogInformation("Subscribed to the topic: {Topic}", _topic);
+                break;
             }
             catch (Exception e) when (e is KafkaException or SocketException)
             {
@@ -81,7 +79,8 @@ internal sealed class Consumer<TKey, TValue> : IConsumer<TKey, TValue>
                     _topic,
                     _recoveryDelay.Seconds
                 );
-                await Task.Delay(_recoveryDelay, token);
+
+                token.WaitHandle.WaitOne(_recoveryDelay);
             }
         }
 

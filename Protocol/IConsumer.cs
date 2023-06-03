@@ -20,8 +20,5 @@ public interface IConsumer<TKey, TValue> : IDisposable
     /// <returns>
     /// Consumed items from the queue.
     /// </returns>
-    /// <remarks>
-    /// Should be treated as long running task and placed in a dedicated thread if possible.
-    /// </remarks>
-    IAsyncEnumerable<Consumed<TKey, TValue>> EnumerateConsumableAsync(CancellationToken token);
+    IEnumerable<Consumed<TKey, TValue>> EnumerateConsumable(CancellationToken token);
 }

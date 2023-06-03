@@ -69,11 +69,11 @@ internal static class MatrixController
         var computed = await repository.IsComputed(id, default);
         if (computed)
         {
-            return Results.Ok(result);
+            return Results.Created($"/matrices/{result.MatrixId}", result);
         }
 
         await productTaskScheduler.ScheduleAsync(id, firstMatrixStream, secondMatrixStream);
-        return Results.Ok(result);
+        return Results.Created($"/matrices/{result.MatrixId}", result);
     }
 
     private record ScheduleResult(int MatrixId);
