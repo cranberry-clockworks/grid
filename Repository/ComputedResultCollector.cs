@@ -3,12 +3,27 @@ using Protocol;
 
 namespace Repository;
 
+/// <summary>
+/// A computed result collector from workers.
+/// </summary>
 internal class ComputedResultCollector : BackgroundService
 {
     private readonly ILogger _logger;
     private readonly IConsumer<ComputedResultKey, ComputedResultValue> _consumer;
     private readonly IMatrixRepository _repository;
 
+    /// <summary>
+    /// Creates the collector.
+    /// </summary>
+    /// <param name="logger">
+    /// A logger instance to write the messages.
+    /// </param>
+    /// <param name="consumer">
+    /// A consumer of computed results from the worker output queue.
+    /// </param>
+    /// <param name="repository">
+    /// The matrix repository to store results.
+    /// </param>
     public ComputedResultCollector(
         ILogger<ComputedResultCollector> logger,
         IConsumer<ComputedResultKey, ComputedResultValue> consumer,

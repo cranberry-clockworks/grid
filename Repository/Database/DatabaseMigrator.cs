@@ -4,6 +4,9 @@ using Microsoft.Extensions.Options;
 
 namespace Repository.Database;
 
+/// <summary>
+/// A class to run database migrations.
+/// </summary>
 internal class DatabaseMigrator
 {
     private readonly ILogger _logger;
