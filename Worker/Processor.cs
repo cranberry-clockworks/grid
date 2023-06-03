@@ -20,13 +20,13 @@ internal class Processor
         _producer = producer;
     }
 
-    public void Run(CancellationToken token)
+    public async Task RunAsync(CancellationToken token)
     {
-        foreach (var consumable in _consumer.EnumerateConsumable(token))
+        await foreach (var consumable in _consumer.EnumerateConsumableAsync(token))
         {
             if (IsValid(consumable.Value))
             {
-                Process(consumable);
+                await ProcessAsync(consumable, token);
             }
             else
             {
@@ -43,31 +43,35 @@ internal class Processor
 
     private bool IsValid(ComputeTaskValue value) => value.Row.Length == value.Column.Length;
 
-    private void Process(Consumable<ComputeTaskKey, ComputeTaskValue> consumable)
+    private async Task ProcessAsync(
+        Consumed<ComputeTaskKey, ComputeTaskValue> consumed,
+        CancellationToken token
+    )
     {
         using var logger = _logger.BeginScope(
             "Processing task. Id: {Id}, Row: {Row}, Column: {Column}",
-            consumable.Key.MatrixId,
-            consumable.Key.Row,
-            consumable.Key.Column
+            consumed.Key.MatrixId,
+            consumed.Key.Row,
+            consumed.Key.Column
         );
 
-        var result = Compute(consumable.Value);
+        var result = Compute(consumed.Value);
 
         _logger.LogTrace("Computed result: {Result}", result);
 
-        _producer.Produce(
+        await _producer.ProduceAsync(
             new ComputedResultKey
             {
-                MatrixId = consumable.Key.MatrixId,
-                Row = consumable.Key.Row,
-                Column = consumable.Key.Column
+                MatrixId = consumed.Key.MatrixId,
+                Row = consumed.Key.Row,
+                Column = consumed.Key.Column
             },
-            new ComputedResultValue { Value = result }
+            new ComputedResultValue { Value = result },
+            token
         );
     }
 
-    private double Compute(ComputeTaskValue task)
+    private static double Compute(ComputeTaskValue task)
     {
         var row = task.Row;
         var column = task.Column;
@@ -80,6 +84,4 @@ internal class Processor
 
         return result;
     }
-
-    private void PushFurther(ComputeTaskKey task, double value) { }
 }

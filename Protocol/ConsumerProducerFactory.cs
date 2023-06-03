@@ -3,20 +3,20 @@ using Microsoft.Extensions.Logging;
 
 namespace Protocol;
 
-public class Factory
+public class ConsumerProducerFactory
 {
-    private const string ComputeTaskGroupId = "multiplier";
-    private const string ComputedResultGropuId = "collector";
+    private const string ComputeTaskGroupId = "multipliers";
+    private const string ComputedResultGroupId = "collectors";
 
     private readonly ILoggerFactory _loggerFactory;
 
-    public Factory(ILoggerFactory loggerFactory)
+    public ConsumerProducerFactory(ILoggerFactory loggerFactory)
     {
         _loggerFactory = loggerFactory;
     }
 
     private static ProducerConfig CreateProducerConfig(string hosts) =>
-        new ProducerConfig
+        new()
         {
             BootstrapServers = hosts,
             AllowAutoCreateTopics = false,
@@ -24,7 +24,7 @@ public class Factory
         };
 
     private static ConsumerConfig CreateConsumerConfig(string hosts, string groupId) =>
-        new ConsumerConfig
+        new()
         {
             BootstrapServers = hosts,
             GroupId = groupId,
@@ -50,7 +50,7 @@ public class Factory
         var config = CreateConsumerConfig(options.Hosts, ComputeTaskGroupId);
         return new Consumer<ComputeTaskKey, ComputeTaskValue>(
             _loggerFactory.CreateLogger<Consumer<ComputeTaskKey, ComputeTaskValue>>(),
-            _loggerFactory.CreateLogger<MessageCommiter<ComputeTaskKey, ComputeTaskValue>>(),
+            _loggerFactory.CreateLogger<MessageCommitter<ComputeTaskKey, ComputeTaskValue>>(),
             options.Topic,
             config
         );
@@ -72,10 +72,10 @@ public class Factory
         KafkaOptions options
     )
     {
-        var config = CreateConsumerConfig(options.Hosts, ComputedResultGropuId);
+        var config = CreateConsumerConfig(options.Hosts, ComputedResultGroupId);
         return new Consumer<ComputedResultKey, ComputedResultValue>(
             _loggerFactory.CreateLogger<Consumer<ComputedResultKey, ComputedResultValue>>(),
-            _loggerFactory.CreateLogger<MessageCommiter<ComputedResultKey, ComputedResultValue>>(),
+            _loggerFactory.CreateLogger<MessageCommitter<ComputedResultKey, ComputedResultValue>>(),
             options.Topic,
             config
         );

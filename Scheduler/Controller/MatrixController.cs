@@ -1,16 +1,34 @@
 using System.Diagnostics;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Scheduler.Repository;
+using Scheduler.Scheduler;
 
-namespace Scheduler;
+namespace Scheduler.Controller;
 
-internal record ScheduleResult(int MatrixId);
-
-internal static class JobController
+/// <summary>
+/// An API controller to schedule matrix multiplications.
+/// </summary>
+internal static class MatrixController
 {
+    /// <summary>
+    /// Schedule matrix multiplication.
+    /// </summary>
+    /// <param name="repository">
+    /// The matrix repository service.
+    /// </param>
+    /// <param name="productTaskScheduler">
+    /// The task scheduler.
+    /// </param>
+    /// <param name="validator">
+    /// The validator for input parameters.
+    /// </param>
+    /// <param name="files">
+    /// Matrix files.
+    /// </param>
     public static async Task<IResult> ScheduleAsync(
         [FromServices] IMatrixRepository repository,
-        [FromServices] Distributor distributor,
+        [FromServices] ProductTaskScheduler productTaskScheduler,
         [FromServices] IValidator<IFormFileCollection> validator,
         IFormFileCollection files
     )
@@ -27,8 +45,8 @@ internal static class JobController
         Debug.Assert(first != null);
         Debug.Assert(second != null);
 
-        using var firstStream = first.OpenReadStream();
-        using var secondStream = second.OpenReadStream();
+        await using var firstStream = first.OpenReadStream();
+        await using var secondStream = second.OpenReadStream();
 
         var firstMatrixStream = new MatrixStreamReader(firstStream);
         var secondMatrixStream = new MatrixStreamReader(secondStream);
@@ -54,7 +72,9 @@ internal static class JobController
             return Results.Ok(result);
         }
 
-        await distributor.ScheduleAsync(id, firstMatrixStream, secondMatrixStream);
+        await productTaskScheduler.ScheduleAsync(id, firstMatrixStream, secondMatrixStream);
         return Results.Ok(result);
     }
+
+    private record ScheduleResult(int MatrixId);
 }

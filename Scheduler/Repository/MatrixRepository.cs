@@ -4,23 +4,26 @@ using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Repository;
 
-namespace Scheduler;
+namespace Scheduler.Repository;
 
 internal class MatrixRepository : IMatrixRepository
 {
-    private readonly ILogger _logger;
-    private readonly openapiClient _clinet;
+    private readonly openapiClient _client;
 
-    public MatrixRepository(
-        ILogger<MatrixRepository> logger,
-        IOptions<MatrixRepositoryOptions> options,
-        HttpClient client
-    )
+    public MatrixRepository(IOptions<MatrixRepositoryOptions> options, HttpClient client)
     {
-        _logger = logger;
-        _clinet = new openapiClient(options.Value.Host, client);
+        _client = new openapiClient(options.Value.Host, client);
     }
 
+    /// <summary>
+    /// Gets a retry policy for the service.
+    /// </summary>
+    /// <param name="provider">
+    /// The service provider.
+    /// </param>
+    /// <returns>
+    /// The retry policy.
+    /// </returns>
     public static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy(IServiceProvider provider)
     {
         var logger = provider.GetRequiredService<ILogger<MatrixRepository>>();
@@ -32,18 +35,19 @@ internal class MatrixRepository : IMatrixRepository
             .HandleTransientHttpError()
             .WaitAndRetryAsync(
                 delay,
-                onRetry: (result, delay) =>
+                onRetry: (r, d) =>
                     logger.LogWarning(
-                        result.Exception,
+                        r.Exception,
                         "Failed to execute request. Waiting {Delay}ms before retry",
-                        delay
+                        d
                     )
             );
     }
 
+    /// <inheritdoc />
     public async Task<int> CreateAsync(int rows, int columns, string hash, CancellationToken token)
     {
-        var result = await _clinet.CreateMatrixAsync(
+        var result = await _client.CreateMatrixAsync(
             new MatrixCreationOptions
             {
                 Rows = rows,
@@ -56,9 +60,10 @@ internal class MatrixRepository : IMatrixRepository
         return result.MatrixId;
     }
 
+    /// <inheritdoc />
     public async Task<bool> IsComputed(int id, CancellationToken token)
     {
-        var result = await _clinet.IsMatrixComputedAsync(id, token);
+        var result = await _client.IsMatrixComputedAsync(id, token);
         return result.IsComputed;
     }
 }

@@ -8,11 +8,18 @@ internal class MatrixRepository : IMatrixRepository
 {
     private readonly IDbConnection _connection;
 
+    /// <summary>
+    /// Creates the repository.
+    /// </summary>
+    /// <param name="connection">
+    /// A connection to the database.
+    /// </param>
     public MatrixRepository(IDbConnection connection)
     {
         _connection = connection;
     }
 
+    /// <inheritdoc />
     public async Task<int> CreateAsync(int rows, int columns, string hash)
     {
         var args = new
@@ -49,6 +56,7 @@ internal class MatrixRepository : IMatrixRepository
             .FirstOrDefault();
     }
 
+    /// <inheritdoc />
     public async Task<bool> IsComputedAsync(int id) =>
         (
             await _connection.QueryAsync(
@@ -65,11 +73,13 @@ internal class MatrixRepository : IMatrixRepository
             )
         ).Any();
 
+    /// <inheritdoc />
     public async Task RemoveAsync(int id) =>
         await _connection.QueryAsync("DELETE FROM Matricies WHERE id = @id", new { id });
 
-    public void Update(int id, int row, int column, double newValue) =>
-        _connection.Query(
+    /// <inheritdoc />
+    public async Task UpdateAsync(int id, int row, int column, double newValue) =>
+        await _connection.QueryAsync(
             """
                 INSERT INTO Values ("id", "row", "column", "value") VALUES
                 (@Id, @Row, @Column, @Value)
@@ -85,6 +95,7 @@ internal class MatrixRepository : IMatrixRepository
             }
         );
 
+    /// <inheritdoc />
     public async Task<IEnumerable<double>> GetComputedValuesAsync(int id) =>
         await _connection.QueryAsync<double>(
             """
@@ -96,6 +107,7 @@ internal class MatrixRepository : IMatrixRepository
             new { id }
         );
 
+    /// <inheritdoc />
     public async Task<MatrixSize?> GetMatrixAsync(int id) =>
         (
             await _connection.QueryAsync<MatrixSize?>(

@@ -20,30 +20,24 @@ internal class ComputedResultCollector : BackgroundService
         _repository = repository;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Task.Run(() => Collect(stoppingToken), stoppingToken);
-        return Task.CompletedTask;
-    }
-
-    private void Collect(CancellationToken token)
-    {
-        foreach (var consumable in _consumer.EnumerateConsumable(token))
+        await foreach (var consumable in _consumer.EnumerateConsumableAsync(stoppingToken))
         {
             UpdateValue(consumable);
             consumable.Commit();
         }
     }
 
-    private void UpdateValue(Consumable<ComputedResultKey, ComputedResultValue> consumable)
+    private void UpdateValue(Consumed<ComputedResultKey, ComputedResultValue> consumed)
     {
         try
         {
-            _repository.Update(
-                consumable.Key.MatrixId,
-                consumable.Key.Row,
-                consumable.Key.Column,
-                consumable.Value.Value
+            _repository.UpdateAsync(
+                consumed.Key.MatrixId,
+                consumed.Key.Row,
+                consumed.Key.Column,
+                consumed.Value.Value
             );
         }
         catch (DbException e)
@@ -51,9 +45,9 @@ internal class ComputedResultCollector : BackgroundService
             _logger.LogError(
                 e,
                 "Failed to update value. Id: {Id}, Row: {Row}, Column: {Column}",
-                consumable.Key.MatrixId,
-                consumable.Key.Row,
-                consumable.Key.Column
+                consumed.Key.MatrixId,
+                consumed.Key.Row,
+                consumed.Key.Column
             );
         }
     }

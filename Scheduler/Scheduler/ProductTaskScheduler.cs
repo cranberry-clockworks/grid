@@ -1,16 +1,29 @@
 using System.Diagnostics;
 using Protocol;
+using Scheduler.Repository;
 
-namespace Scheduler;
+namespace Scheduler.Scheduler;
 
-internal class Distributor
+internal class ProductTaskScheduler : IProductTaskScheduler
 {
     private readonly ILogger _logger;
     private readonly IMatrixRepository _repository;
     private readonly IProducer<ComputeTaskKey, ComputeTaskValue> _producer;
 
-    public Distributor(
-        ILogger<Distributor> logger,
+    /// <summary>
+    /// Creates the task scheduler.
+    /// </summary>
+    /// <param name="logger">
+    /// A logger instance to write messages.
+    /// </param>
+    /// <param name="repository">
+    /// The matrix repository.
+    /// </param>
+    /// <param name="producer">
+    /// The item queue producer to schedule created tasks.
+    /// </param>
+    public ProductTaskScheduler(
+        ILogger<ProductTaskScheduler> logger,
         IMatrixRepository repository,
         IProducer<ComputeTaskKey, ComputeTaskValue> producer
     )
@@ -20,7 +33,11 @@ internal class Distributor
         _producer = producer;
     }
 
-    public async Task ScheduleAsync(int id, MatrixStreamReader first, MatrixStreamReader second)
+    public async Task ScheduleAsync(
+        int matrixId,
+        MatrixStreamReader first,
+        MatrixStreamReader second
+    )
     {
         Debug.Assert(first.Columns == second.Rows);
 
@@ -38,7 +55,7 @@ internal class Distributor
             {
                 var columnValues = second.ReadColumn();
 
-                tasks.Add(ScheduleSingleValueAsync(id, row, column, rowValues, columnValues));
+                tasks.Add(ScheduleSingleValueAsync(matrixId, row, column, rowValues, columnValues));
             }
 
             second.StartAgain();

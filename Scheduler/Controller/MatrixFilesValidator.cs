@@ -1,5 +1,7 @@
 using FluentValidation;
 
+namespace Scheduler.Controller;
+
 internal class MatrixFilesValidator : AbstractValidator<IFormFileCollection>
 {
     private static readonly IReadOnlySet<string> Names = new HashSet<string> { "First", "Second" };

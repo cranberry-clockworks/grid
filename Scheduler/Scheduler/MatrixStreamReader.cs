@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Scheduler;
+namespace Scheduler.Scheduler;
 
 internal class MatrixStreamReader
 {

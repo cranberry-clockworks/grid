@@ -2,7 +2,7 @@ using System.Reflection;
 using DbUp;
 using Microsoft.Extensions.Options;
 
-namespace Repository;
+namespace Repository.Database;
 
 internal class DatabaseMigrator
 {
@@ -30,11 +30,11 @@ internal class DatabaseMigrator
 
         if (result.Successful)
         {
-            _logger.LogInformation("Migrated successfuly");
+            _logger.LogInformation("Migrated successfully");
         }
         else
         {
-            _logger.LogError(result.Error, "Failed to migrate database");
+            _logger.LogError(result.Error, "Failed to migrate the database");
             throw result.Error;
         }
     }

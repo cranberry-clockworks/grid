@@ -1,23 +1,30 @@
 using FluentValidation;
 using Microsoft.Extensions.Options;
 using Protocol;
-using Scheduler;
+using Scheduler.Controller;
+using Scheduler.Repository;
+using Scheduler.Scheduler;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddEnvironmentVariables();
 
 builder.Logging.AddConsole();
 
+builder.Configuration.AddEnvironmentVariables();
 builder.Services.Configure<KafkaOptions>(
-    o => builder.Configuration.GetRequiredSection(KafkaOptions.SectionName).Bind(o)
+    options => builder.Configuration.GetRequiredSection(KafkaOptions.SectionName).Bind(options)
 );
+builder.Services.Configure<MatrixRepositoryOptions>(
+    options =>
+        builder.Configuration.GetRequiredSection(MatrixRepositoryOptions.SectionName).Bind(options)
+);
+
 builder.Services.AddSingleton<IProducer<ComputeTaskKey, ComputeTaskValue>>(services =>
 {
     var options = services.GetRequiredService<IOptions<KafkaOptions>>();
     var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-    return new Factory(loggerFactory).CreateComputeTaskProducer(options.Value);
+    return new ConsumerProducerFactory(loggerFactory).CreateComputeTaskProducer(options.Value);
 });
-builder.Services.Configure<MatrixRepositoryOptions>(o => o.With(builder.Configuration));
+
 builder.Services
     .AddHttpClient<IMatrixRepository, MatrixRepository>(
         (services, client) =>
@@ -29,11 +36,11 @@ builder.Services
     .AddPolicyHandler((provider, _) => MatrixRepository.GetRetryPolicy(provider));
 builder.Services.AddSingleton<IMatrixRepository, MatrixRepository>();
 
-builder.Services.AddSingleton<Distributor>();
+builder.Services.AddSingleton<ProductTaskScheduler>();
 builder.Services.AddScoped<IValidator<IFormFileCollection>, MatrixFilesValidator>();
 
 var app = builder.Build();
 
-app.MapPost("/jobs", JobController.ScheduleAsync);
+app.MapPost("/matrices", MatrixController.ScheduleAsync);
 
 app.Run();
