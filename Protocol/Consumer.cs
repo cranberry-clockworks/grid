@@ -13,9 +13,6 @@ namespace Protocol;
 /// <typeparam name="TValue">
 /// The value type of the consumed item.
 /// </typeparam>
-/// <remarks>
-/// Implementation made with "async over sync" pattern.
-/// </remarks>
 internal sealed class Consumer<TKey, TValue> : IConsumer<TKey, TValue>
 {
     private readonly ILogger<MessageCommitter<TKey, TValue>> _notifierLogger;
