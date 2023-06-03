@@ -25,4 +25,7 @@ public class ComputedResultKey
     /// </summary>
     [ProtoMember(3)]
     public int Column { get; init; }
+
+    public override string ToString() =>
+        $"{{ MatrixId = {MatrixId}, Row = {Row}, Column = {Column}}}";
 }

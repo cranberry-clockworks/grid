@@ -49,7 +49,7 @@ internal sealed class Producer<TKey, TValue> : IProducer<TKey, TValue>
             token
         );
 
-        _logger.LogInformation(
+        _logger.LogDebug(
             "Produced item. Topic: {Topic}, Key: {Key}, Value: {Value}",
             _topic,
             key,
@@ -62,7 +62,7 @@ internal sealed class Producer<TKey, TValue> : IProducer<TKey, TValue>
     {
         _producer.Produce(_topic, new Message<TKey, TValue>() { Key = key, Value = value });
 
-        _logger.LogInformation(
+        _logger.LogDebug(
             "Produced item. Topic: {Topic}, Key: {Key}, Value: {Value}",
             _topic,
             key,

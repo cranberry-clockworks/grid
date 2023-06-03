@@ -13,6 +13,7 @@ services:
     ports:
       - 22001:80
     environment:
+      Logging__LogLevel__Default: Debug
       Kafka__Hosts: broker:29092
       Kafka__Topic: results
       ConnectionStrings__Postgres: Server=host.docker.internal;Port=5432;Database=Repository;User Id=repository;Password=12345678;
@@ -29,6 +30,7 @@ services:
     ports:
       - 22000:80
     environment:
+      Logging__LogLevel__Default: Debug
       Kafka__Hosts: broker:29092
       Kafka__Topic: tasks
       MatrixRepository__Host: http://repository:80
@@ -41,6 +43,7 @@ services:
       kafka-startup:
         condition: service_completed_successfully
     environment:
+      Logging__LogLevel__Default: Debug
       Kafka__Input__Hosts: broker:29092
       Kafka__Input__Topic: tasks
       Kafka__Output__Hosts: broker:29092

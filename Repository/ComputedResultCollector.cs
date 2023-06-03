@@ -51,7 +51,7 @@ internal class ComputedResultCollector : IHostedService, IDisposable
     {
         try
         {
-            _repository.UpdateAsync(
+            _repository.Update(
                 consumed.Key.MatrixId,
                 consumed.Key.Row,
                 consumed.Key.Column,

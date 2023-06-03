@@ -40,7 +40,7 @@ internal interface IMatrixRepository
     /// <param name="newValue">
     /// The new value of the cell.
     /// </param>
-    Task UpdateAsync(int id, int row, int column, double newValue);
+    void Update(int id, int row, int column, double newValue);
 
     /// <summary>
     /// Checks if the matrix is computed.

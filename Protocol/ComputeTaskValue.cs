@@ -22,4 +22,6 @@ public class ComputeTaskValue
     /// </summary>
     [ProtoMember(2)]
     public double[] Column { get; init; } = Array.Empty<double>();
+
+    public override string ToString() => $"{{ Row = [{Row.Length}], Column = [{Column}]}}";
 }

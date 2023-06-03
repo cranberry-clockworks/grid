@@ -7,21 +7,32 @@ namespace Repository;
 internal class MatrixRepository : IMatrixRepository
 {
     private readonly IDbConnection _connection;
+    private readonly ILogger _logger;
 
     /// <summary>
     /// Creates the repository.
     /// </summary>
+    /// <param name="logger">
+    /// A logger to write messages.
+    /// </param>
     /// <param name="connection">
     /// A connection to the database.
     /// </param>
-    public MatrixRepository(IDbConnection connection)
+    public MatrixRepository(ILogger<MatrixRepository> logger, IDbConnection connection)
     {
+        _logger = logger;
         _connection = connection;
     }
 
     /// <inheritdoc />
     public async Task<int> CreateAsync(int rows, int columns, string hash)
     {
+        using var scope = _logger.BeginScope(
+            "Creating new product matrix. Rows: {Rows}, Columns: {Columns}, Hash: {Hash}",
+            rows,
+            columns,
+            hash
+        );
         var args = new
         {
             rows,
@@ -29,7 +40,7 @@ internal class MatrixRepository : IMatrixRepository
             hash
         };
 
-        var hashed = (
+        var cached = (
             await _connection.QueryAsync<int>(
                 """
                 SELECT id from Matricies
@@ -39,12 +50,14 @@ internal class MatrixRepository : IMatrixRepository
             )
         ).ToList();
 
-        if (hashed.Count != 0)
+        if (cached.Count != 0)
         {
-            return hashed.First();
+            var cachedId = cached.First();
+            _logger.LogDebug("Already existed with given hash. Id: {Id}", cachedId);
+            return cachedId;
         }
 
-        return _connection
+        var id = _connection
             .Query<int>(
                 """
                 INSERT INTO Matricies (rows, columns, hash) VALUES
@@ -54,11 +67,15 @@ internal class MatrixRepository : IMatrixRepository
                 args
             )
             .FirstOrDefault();
+        _logger.LogDebug("Created. Id: {Id}", id);
+        return id;
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsComputedAsync(int id) =>
-        (
+    public async Task<bool> IsComputedAsync(int id)
+    {
+        using var scope = _logger.BeginScope("Checking if already computed. Id: {id}");
+        var computed = (
             await _connection.QueryAsync(
                 """
             SELECT m.id
@@ -72,14 +89,27 @@ internal class MatrixRepository : IMatrixRepository
                 new { id }
             )
         ).Any();
+        _logger.LogDebug("Computed: {Result}", computed);
+        return computed;
+    }
 
     /// <inheritdoc />
     public async Task RemoveAsync(int id) =>
         await _connection.QueryAsync("DELETE FROM Matricies WHERE id = @id", new { id });
 
+    private readonly SemaphoreSlim _semaphore = new(1);
+
     /// <inheritdoc />
-    public async Task UpdateAsync(int id, int row, int column, double newValue) =>
-        await _connection.QueryAsync(
+    public void Update(int id, int row, int column, double newValue)
+    {
+        _logger.LogDebug(
+            "Update value. Id: {Id}, Row: {Row}, Column: {Column}, Value: {Value}",
+            id,
+            row,
+            column,
+            newValue
+        );
+        _connection.Query(
             """
                 INSERT INTO Values ("id", "row", "column", "value") VALUES
                 (@Id, @Row, @Column, @Value)
@@ -94,10 +124,13 @@ internal class MatrixRepository : IMatrixRepository
                 Value = newValue
             }
         );
+    }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<double>> GetComputedValuesAsync(int id) =>
-        await _connection.QueryAsync<double>(
+    public async Task<IEnumerable<double>> GetComputedValuesAsync(int id)
+    {
+        _logger.LogDebug("Requesting computed values. Id: {Id}", id);
+        return await _connection.QueryAsync<double>(
             """
             SELECT "value"
             FROM Values
@@ -106,10 +139,13 @@ internal class MatrixRepository : IMatrixRepository
             """,
             new { id }
         );
+    }
 
     /// <inheritdoc />
-    public async Task<MatrixSize?> GetMatrixAsync(int id) =>
-        (
+    public async Task<MatrixSize?> GetMatrixAsync(int id)
+    {
+        using var scope = _logger.BeginScope("Requesting size for matrix. Id: {Id}", id);
+        var size = (
             await _connection.QueryAsync<MatrixSize?>(
                 """
             SELECT "rows", "columns"
@@ -119,4 +155,7 @@ internal class MatrixRepository : IMatrixRepository
                 new { id }
             )
         ).FirstOrDefault();
+        _logger.LogDebug("Requested size. Size: {Size}", size);
+        return size;
+    }
 }

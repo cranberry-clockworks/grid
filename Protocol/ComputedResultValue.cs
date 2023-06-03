@@ -1,3 +1,4 @@
+using System.Globalization;
 using ProtoBuf;
 
 namespace Protocol;
@@ -13,4 +14,6 @@ public class ComputedResultValue
     /// </summary>
     [ProtoMember(1)]
     public double Value { get; init; }
+
+    public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
 }

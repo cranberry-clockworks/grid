@@ -44,10 +44,10 @@ internal class ProductTaskScheduler : IProductTaskScheduler
         var rows = first.Rows;
         var columns = second.Columns;
 
+        var tasks = new List<Task>(columns);
+        var scheduled = 0;
         for (var row = 0; row < rows; ++row)
         {
-            var tasks = new List<Task>(columns);
-
             // reading rows and columns should be in sync with indexes
             var rowValues = first.ReadRow();
 
@@ -56,12 +56,16 @@ internal class ProductTaskScheduler : IProductTaskScheduler
                 var columnValues = second.ReadColumn();
 
                 tasks.Add(ScheduleSingleValueAsync(matrixId, row, column, rowValues, columnValues));
+                scheduled++;
             }
 
             second.StartAgain();
 
             await Task.WhenAll(tasks);
+            tasks.Clear();
         }
+
+        _logger.LogInformation("Scheduled task batch. Size: {Size}", scheduled);
     }
 
     private async Task ScheduleSingleValueAsync(
