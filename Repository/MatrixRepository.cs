@@ -74,7 +74,7 @@ internal class MatrixRepository : IMatrixRepository
     /// <inheritdoc />
     public async Task<bool> IsComputedAsync(int id)
     {
-        using var scope = _logger.BeginScope("Checking if already computed. Id: {id}");
+        using var scope = _logger.BeginScope("Checking if already computed. Id: {Id}", id);
         var computed = (
             await _connection.QueryAsync(
                 """
