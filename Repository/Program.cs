@@ -8,6 +8,9 @@ using Repository;
 using Repository.Models;
 using Repository.Validations;
 using System.Data;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Repository.Database;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,7 +33,10 @@ builder.Services.AddSwaggerGen(
 builder.Services.Configure<KafkaOptions>(
     o => builder.Configuration.GetRequiredSection(KafkaOptions.SectionName).Bind(o)
 );
-builder.Services.AddSingleton<IConsumer<ComputedResultKey, ComputedResultValue>>(services =>
+builder.Services.AddSingleton<Protocol.IConsumer<
+    ComputedResultKey,
+    ComputedResultValue
+>>(services =>
 {
     var options = services.GetRequiredService<IOptions<KafkaOptions>>();
     var loggerFactory = services.GetRequiredService<ILoggerFactory>();
@@ -53,6 +59,25 @@ builder.Services.AddTransient<IMatrixRepository, MatrixRepository>();
 builder.Services.AddScoped<IValidator<MatrixCreationOptions>, MatrixCreationOptionsValidator>();
 builder.Services.AddHostedService<ComputedResultCollector>();
 
+builder.Services
+    .AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("Postgres") ?? string.Empty,
+        name: "Postgres"
+    )
+    .AddKafka(
+        config =>
+        {
+            var options = new KafkaOptions();
+            builder.Configuration.GetRequiredSection(KafkaOptions.SectionName).Bind(options);
+            config.BootstrapServers = options.Hosts;
+        },
+        "healthcheck",
+        "Kafka",
+        HealthStatus.Degraded,
+        timeout: TimeSpan.FromSeconds(2)
+    );
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -65,6 +90,11 @@ using (var scope = app.Services.CreateScope())
 {
     scope.ServiceProvider.GetRequiredService<DatabaseMigrator>().Migrate();
 }
+
+app.MapHealthChecks(
+    "/status",
+    new HealthCheckOptions() { ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse }
+);
 
 app.MapPost(
         "/matrices",
