@@ -2,14 +2,13 @@
 version: '3'
 services:
   repository:
-    image: grid.repository:0.1
+    image: cranberryknight/grid.repository:0.1
     build:
       context: .
       dockerfile: dockerfile.repository
     depends_on:
       kafka-startup:
         condition: service_completed_successfully
-
     ports:
       - 22001:80
     environment:
@@ -18,7 +17,7 @@ services:
       Kafka__Topic: results
       ConnectionStrings__Postgres: Server=host.docker.internal;Port=5432;Database=Repository;User Id=repository;Password=12345678;
   scheduler:
-    image: grid.scheduler:0.1
+    image: cranberryknight/grid.scheduler:0.1
     build:
       context: .
       dockerfile: dockerfile.scheduler
@@ -35,7 +34,7 @@ services:
       Kafka__Topic: tasks
       MatrixRepository__Host: http://repository:80
   worker:
-    image: grid.worker:0.1
+    image: cranberryknight/grid.worker:0.1
     build:
       context: .
       dockerfile: dockerfile.worker

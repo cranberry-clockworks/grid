@@ -1,7 +1,7 @@
 using FluentValidation;
 using Repository.Models;
 
-namespace Repository.Validations;
+namespace Repository.Validation;
 
 internal class MatrixCreationOptionsValidator : AbstractValidator<MatrixCreationOptions>
 {

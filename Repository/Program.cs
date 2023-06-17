@@ -6,12 +6,12 @@ using Npgsql;
 using Protocol;
 using Repository;
 using Repository.Models;
-using Repository.Validations;
 using System.Data;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Repository.Database;
+using Repository.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();

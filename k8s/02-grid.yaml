@@ -1,0 +1,170 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka
+data:
+  scheduler-to-worker-topic: tasks
+  worker-to-repository-topic: results
+  healthcheck-topic: healthcheck
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scheduler
+spec:
+  selector:
+    app: scheduler
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: repository
+
+spec:
+  selector:
+    app: repository
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  labels:
+    name: ingress
+spec:
+  rules:
+    - http:
+        paths:
+        - pathType: Prefix
+          path: "/product"
+          backend:
+            service:
+              name: scheduler
+              port: 
+                number: 80
+        - pathType: Prefix
+          path: "/matrices"
+          backend:
+            service:
+              name: repository
+              port: 
+                number: 80
+        - pathType: Prefix
+          path: "/status"
+          backend:
+            service:
+              name: repository
+              port: 
+                number: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: repository
+spec:
+  selector:
+    matchLabels:
+      app: repository
+  template:
+    metadata:
+      labels:
+        app: repository
+    spec:
+      containers:
+      - name: repository
+        image: cranberryknight/grid.repository:0.1
+        resources:
+          limits:
+            memory: "4Gi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80
+        env:
+        - name: Kafka__Hosts
+          value: queue:9092
+        - name: Kafka__Topic
+          valueFrom:
+            configMapKeyRef:
+              name: kafka
+              key: worker-to-repository-topic
+        - name: ConnectionStrings__Postgres
+          valueFrom:
+            secretKeyRef:
+              name: postgres
+              key: connection-string
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+spec:
+  selector:
+    matchLabels:
+      app: scheduler
+  template:
+    metadata:
+      labels:
+        app: scheduler
+    spec:
+      containers:
+      - name: scheduler
+        image: cranberryknight/grid.scheduler:0.1
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "200m"
+        ports:
+        - containerPort: 80
+        env:
+        - name: Logging__LogLevel__Default
+          value: Debug
+        - name: Kafka__Hosts
+          value: queue:9092
+        - name: Kafka__Topic
+          value: scheduler-to-worker-topic
+        - name: MatrixRepository__Host
+          value: http://repository:80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: worker
+        image: cranberryknight/grid.worker:0.1
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        env:
+          - name: Logging__LogLevel__Default
+            value: Debug
+          - name: Kafka__Input__Hosts
+            value: queue:9092
+          - name: Kafka__Input__Topic
+            valueFrom:
+              configMapKeyRef:
+                name: kafka
+                key: scheduler-to-worker-topic
+          - name: Kafka__Output__Hosts
+            value: queue:9092
+          - name: Kafka__Output__Topic
+            valueFrom:
+              configMapKeyRef:
+                name: kafka
+                key: worker-to-repository-topic
